@@ -1,20 +1,19 @@
-FROM debian:13-slim
+FROM node:20-alpine
 
-# Pasang dependensi utama yang ringan tanpa kompilasi ulang
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl python3 python3-pip git openssh-client nodejs npm \
-    && rm -rf /var/lib/apt/lists/*
+# Pasang dependensi sistem yang dibutuhkan oleh git dan openssh
+RUN apk add --no-cache git openssh-client python3 make g++
 
-WORKDIR /opt/hermes
+WORKDIR /app
 
-# Salin seluruh kode proyek
+# Salin seluruh file proyek dari hasil fork ke dalam container
 COPY . .
 
-# Pasang runtime paket hermes secara global
-RUN npm install -g @nousresearch/hermes-agent --unsafe-perm
+# Pasang semua dependensi internal proyek langsung dari file lokal
+RUN npm install
 
-# Setel port standar web dashboard
+# Daftarkan perintah CLI hermes secara lokal agar bisa dieksekusi
+RUN npm link
+
 EXPOSE 8080
 
-# Jalankan gateway komunikasi otomatis
-CMD ["hermes", "gateway"]
+CMD ["npm", "run", "gateway"]
